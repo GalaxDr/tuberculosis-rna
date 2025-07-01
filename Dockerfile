@@ -43,4 +43,4 @@ EXPOSE 8080
 ENTRYPOINT ["java", "-Dserver.port=${PORT:-8080}", "-jar", "app.jar"]
 # If you need to use $PORT from the environment, change the above to:
 # ENTRYPOINT ["java", "-Dserver.port=${PORT:-8080}", "-jar", "app.jar"]
-# The ${PORT:-8080} syntax means use $PORT if set, otherwise default to 8080
+# The ${PORT:-8080} syntax means use $PORT if set, otherwise default to 8080 a
