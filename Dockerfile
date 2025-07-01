@@ -5,7 +5,6 @@ FROM eclipse-temurin:17-jdk-focal AS builder
 WORKDIR /app
 
 # Copy the Maven wrapper and pom.xml first to leverage Docker cache
-# This means if only source code changes, Maven dependencies won't be re-downloaded
 COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
@@ -14,13 +13,30 @@ COPY pom.xml .
 # This is crucial for your ADReNA_API.jar and gson-2.2.4.jar
 COPY lib lib/
 
+# --- NOVO PASSO: Instalar JARs locais no repositório Maven do contêiner ---
+# Isso garante que o Maven os encontre como dependências normais
+RUN chmod +x mvnw \
+    && ./mvnw install:install-file \
+       -Dfile=./lib/ADReNA_API.jar \
+       -DgroupId=ADReNA_API \
+       -DartifactId=ADReNA_API \
+       -Dversion=1.0 \
+       -Dpackaging=jar \
+       -DlocalRepositoryPath=./.m2/repository \
+    && ./mvnw install:install-file \
+       -Dfile=./lib/gson-2.2.4.jar \
+       -DgroupId=com.google.code.gson \
+       -DartifactId=gson \
+       -Dversion=2.2.4 \
+       -Dpackaging=jar \
+       -DlocalRepositoryPath=./.m2/repository
+# -------------------------------------------------------------------------
+
 # Copy the rest of your application source code
 COPY src src/
 
 # Build the application using Maven
-# The 'install' goal will package your application into a JAR
-# -DskipTests: Skips running tests to speed up the build (remove if you want tests to run)
-# -DoutputFile=target/mvn-dependency-list.log: For Nixpacks compatibility, though not strictly needed here
+# Agora, o Maven encontrará ADReNA_API e gson no seu repositório local
 RUN chmod +x mvnw \
     && ./mvnw -DoutputFile=target/mvn-dependency-list.log -B -DskipTests clean dependency:list install
 
@@ -31,16 +47,13 @@ FROM eclipse-temurin:17-jre-focal
 WORKDIR /app
 
 # Copy the built JAR from the builder stage
-# The 'repackage' goal of the Spring Boot Maven plugin creates an executable JAR
-# The name might vary slightly, so we use a wildcard
 COPY --from=builder /app/target/*.jar app.jar
 
 # Expose the port your Spring Boot application runs on (default is 8080)
 EXPOSE 8080
 
 # Define the command to run your application
-# The $PORT environment variable will be provided by your deployment environment (e.g., Nixpacks, Kubernetes)
 ENTRYPOINT ["java", "-Dserver.port=${PORT:-8080}", "-jar", "app.jar"]
-# If you need to use $PORT from the environment, change the above to:
+# Se precisar usar a variável de ambiente $PORT, altere para:
 # ENTRYPOINT ["java", "-Dserver.port=${PORT:-8080}", "-jar", "app.jar"]
-# The ${PORT:-8080} syntax means use $PORT if set, otherwise default to 8080 a
+# A sintaxe ${PORT:-8080} significa usar $PORT se definida, caso contrário, usar 8080
