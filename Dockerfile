@@ -15,6 +15,7 @@ COPY lib lib/
 
 # --- NOVO PASSO: Instalar JARs locais no repositório Maven do contêiner ---
 # Isso garante que o Maven os encontre como dependências normais
+# Removido '-DlocalRepositoryPath=./.m2/repository' para que Maven use o local padrão.
 RUN chmod +x mvnw \
     && ./mvnw install:install-file \
        -Dfile=./lib/ADReNA_API.jar \
@@ -22,14 +23,12 @@ RUN chmod +x mvnw \
        -DartifactId=ADReNA_API \
        -Dversion=1.0 \
        -Dpackaging=jar \
-       -DlocalRepositoryPath=./.m2/repository \
     && ./mvnw install:install-file \
        -Dfile=./lib/gson-2.2.4.jar \
        -DgroupId=com.google.code.gson \
        -DartifactId=gson \
        -Dversion=2.2.4 \
-       -Dpackaging=jar \
-       -DlocalRepositoryPath=./.m2/repository
+       -Dpackaging=jar
 # -------------------------------------------------------------------------
 
 # Copy the rest of your application source code
@@ -53,7 +52,7 @@ COPY --from=builder /app/target/*.jar app.jar
 EXPOSE 8080
 
 # Define the command to run your application
-ENTRYPOINT ["java", "-Dserver.port=${PORT:-8080}", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Dserver.port=8080", "-jar", "app.jar"]
 # Se precisar usar a variável de ambiente $PORT, altere para:
 # ENTRYPOINT ["java", "-Dserver.port=${PORT:-8080}", "-jar", "app.jar"]
 # A sintaxe ${PORT:-8080} significa usar $PORT se definida, caso contrário, usar 8080
