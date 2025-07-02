@@ -24,7 +24,7 @@ public class TuberculosisRNADTO {
     private AgravanteEnum           agravanteDoencaMental;
     private BasciloscopiaEnum       baciloscopia;
     private CulturaEscarroEnum      culturaEscarro;
-    private TempoCuraEnum           tempoCura;
+    private int                     tempoCura;
     private double[]                saidaRecognize;
 
     public double[] getEntradaNeuronio() {
@@ -46,6 +46,6 @@ public class TuberculosisRNADTO {
     }
 
     public double[] getSaidaNeuronio() {
-        return this.tempoCura.getProbabilidade();
+        return new double[]{(double) this.tempoCura / 10000};
     }
 }
